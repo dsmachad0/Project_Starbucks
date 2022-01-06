@@ -1,0 +1,262 @@
+
+First, let's take a look on the dataset: 
+
+SELECT *
+FROM [dbo].['Starbucks satisfactory survey e$'] 
+  
+----------------------------------------------------------------------------
+The dataset contains 34 columns that it is encoded according to the answers provided on the survey.
+
+Here is the original labels for each column that I will use: 
+
+gender : 0- Male,  1- Female.
+age: 0- Below 20, 1- From 20 to 29, 2- From 30 to 39, 3- 40 and above.
+status: 0- Student, 1- Self-Employed, 2- Employed, 3- Housewife. 
+income: 0- Less than RM25,000, 1- RM25,000 – RM50,000, 2- RM50,000 – RM100,000, 3- RM100,000 – RM150,000, 4- More than RM150,000.
+visitNo: 0- Daily, 1- Weekly, 3- Monthly, 4- Never.
+method: 0- Dine-In, 1- Drive-thru, 2-Take away, 3-Never, 4-Others
+timeSpend: 0- Below 30 mins, 1- 30 mins to 1h, 2- 1h to 2h, 3- 2h to 3h, 4- More than 3h.
+location: 0- Within 1km, 1- 1km to 3km, 2- More than 3km.
+membershipCard: 0- Yes, 1- No.
+  
+----------------------------------------------------------------------------
+To clean this dataset, it will be needed to first convert the columns that have integer type into varchar (string).
+Then, update each value to match the labels above.
+
+--Checking data type on gender column.
+SELECT DATA_TYPE 
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE COLUMN_NAME = 'gender'
+
+-- Altering data type from float to varchar.
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN gender varchar(10)
+
+--Updating values of the column according to the labels provided
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET gender =  (
+  CASE 
+    WHEN gender = 0  THEN 'Male'
+    WHEN gender = 1  THEN 'Female'
+    END )
+WHERE gender = 0 or gender = 1
+
+ -----------------------------------------------------------------------------
+--Checking data type
+SELECT DATA_TYPE 
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE COLUMN_NAME = 'age'   
+
+--Altering data type
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN age varchar(20)
+
+--Updating values
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET age =(
+  CASE 
+    WHEN age = 0 THEN 'Below 20'
+    WHEN age = 1 THEN 'From 20 to 29'
+    WHEN age = 2 THEN 'From 30 to 39'
+    WHEN age = 3 THEN '40 and above'
+    END )
+WHERE age IN (0,1,2,3)
+------------------------------------------------------------------------------
+
+--Checking dataset
+SELECT *
+ FROM [dbo].['Starbucks satisfactory survey e$']  
+  
+------------------------------------------------------------------------------
+ --Repeating the process for 'status' column
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN status varchar(20)
+
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET status = (
+	CASE
+		WHEN status = 0 THEN 'Student'
+		WHEN status = 1 THEN 'Self-Employed'
+		WHEN status = 2 THEN 'Employed'
+		WHEN status = 3 THEN 'Housewife'
+		END)
+WHERE status IN (0,1,2,3);    
+
+--------------------------------------------------------------------------------
+ --Repeating the process for 'income' column
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN income varchar(30)
+
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET income =(
+	CASE
+		WHEN income = 0 THEN 'Less than RM25,000 '
+		WHEN income = 1 THEN 'RM25,000 – RM50,000'
+		WHEN income = 2 THEN 'RM50,000 – RM100,000'
+		WHEN income = 3 THEN 'RM100,000 – RM150,000'
+		WHEN income = 4 THEN 'More than RM150,000'
+		END)
+WHERE income IN (0,1,2,3,4);   
+---------------------------------------------------------------------------------
+
+-- When updating the next column (visitNo), I noticed that it was missing a label for number 2
+--{0 - Daily, 1 - Weekly, 3 - Monthly, 4 - Rarely}. Some investigation was required.
+
+--I grouped the values to check how many values '2' were missing.
+
+SELECT count(*), visitNo
+FROM [dbo].['Starbucks satisfactory survey e$']  
+GROUP BY visitNo
+  
+--When grouping the values, I noticed that there was not any '4' values, and only the label for value '2' was missing.
+--After checking further, the legend of this column was not correct, so I only need to correct the labels. 
+
+--Altering data type
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN visitNo varchar(10)
+  
+--Updating the values
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET visitNo = (
+	CASE 
+		WHEN visitNo = 0 THEN 'Daily'
+		WHEN visitNo = 1 THEN 'Weekly'
+		WHEN visitNo = 2 THEN 'Monthly'
+		WHEN visitNo = 3 THEN 'Rarely'
+		END)
+	WHERE visitNo IN (0,1,2,3)   
+
+----------------------------------------------------------------------------------
+--Repeating the process for 'method' column
+
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN method varchar(15)
+
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET method = (
+	CASE 
+		WHEN method = 0 THEN 'Dine in'
+		WHEN method = 1 THEN 'Drive-thru'
+		WHEN method = 2 THEN 'Take Away'
+		WHEN method = 3 THEN 'Never'
+		WHEN method = 4 THEN 'Others'
+		END)
+	WHERE method IN (0,1,2,3) 
+
+-----------------------------------------------------------------------------------
+
+--I notice that the column values do not fully match with the labels provided for this survey.
+--{0- Dine In, 1- Drive-thru, 2- Take away, 3- Never, 4- Others}
+
+SELECT count(*), method
+FROM [dbo].['Starbucks satisfactory survey e$']  
+GROUP BY method 
+  
+--After further investigation, there is one value of '5', and there is no value '3' or '4'.
+--I updated this value(5) as 3 and labeled it as 'Others'
+  
+--Updating value 5 to 3.
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET method = 3
+WHERE method = 5;    
+
+--Altering the data type.
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN method varchar(15)
+
+--Updating values.
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET method = (
+	CASE 
+		WHEN method = 0 THEN 'Dine in'
+		WHEN method = 1 THEN 'Drive-thru'
+		WHEN method = 2 THEN 'Take Away'
+		WHEN method = 3 THEN 'Others'
+		END)
+	WHERE method IN (0,1,2,3)
+-----------------------------------------------------------------------------------------
+ --Repeating the process for 'timeSpend' column.
+ 
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN timeSpend varchar(20)
+
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET timeSpend = (
+	CASE
+		WHEN timeSpend = 0 THEN 'Below 30 minutes'
+		WHEN timeSpend = 1 THEN '30 min to 1h'
+		WHEN timeSpend = 2 THEN '1h to 2h'
+		WHEN timeSpend = 3 THEN '2h to 3h'
+		WHEN timeSpend = 4 THEN 'More than 3h'
+		END)
+WHERE timeSpend IN (0,1,2,3,4) 
+
+-------------------------------------------------------------------------------------------
+ --Repeating the process for 'location' column.
+ 
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN location varchar(15)
+
+UPDATE [dbo].['Starbucks satisfactory survey e$'] 
+SET location =(
+	CASE
+		WHEN location = 0 THEN 'Within 1km'
+		WHEN location = 1 THEN '1km to 3km'
+		WHEN location = 2 THEN 'More than 3km'
+		END)
+WHERE location IN (0,1,2)
+---------------------------------------------------------------------------------------------
+ --Repeating the process for 'membershipCard' column.
+ 
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$'] 
+ALTER COLUMN membershipCard varchar(5)
+
+UPDATE [dbo].['Starbucks satisfactory survey e$']
+SET membershipCard = (
+	CASE
+		WHEN membershipCard = 0 THEN 'Yes'
+		WHEN membershipCard = 1 THEN 'No'
+		END)
+WHERE membershipCard IN (0,1) 
+----------------------------------------------------------------------------------------------
+
+--Checking the dataset.
+
+SELECT * 
+FROM [dbo].['Starbucks satisfactory survey e$'];
+
+-----------------------------------------------------------------------------------------------
+
+--Since the other columns are not relevant for my analysis, I dropped the remaining columns.
+
+ALTER TABLE [dbo].['Starbucks satisfactory survey e$']
+DROP COLUMN itemPurchaseCoffee ,
+		itempurchaseCold,
+		itemPurchasePastries,
+		itemPurchaseJuices,
+		itemPurchaseSandwiches,
+		itemPurchaseOthers,
+		spendPurchase,
+		productRate,
+		priceRate,
+		promoRate,
+		ambianceRate,
+		wifiRate,
+		serviceRate,
+		chooseRate,
+		promoMethodApp,
+		promoMethodSoc,
+		promoMethodEmail,
+		promoMethodDeal,
+		promoMethodFriend,
+		promoMethodDisplay,
+		promoMethodBillboard,
+		promoMethodOthers,
+		loyal;
+-------------------------------------------------------------------------------------------------
+--Final check
+
+SELECT *
+FROM [dbo].['Starbucks satisfactory survey e$'] ;
+
+
