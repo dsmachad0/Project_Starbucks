@@ -1,0 +1,114 @@
+
+-- For my initial analysis of this dataset, I performed a simple exploratory data analysis to discover any correlation of custumers atributes and their frequency in this store.
+
+-- First, let's see how many people of each gender replied to the survey.
+
+SELECT COUNT(*), gender
+FROM [dbo].['Starbucks satisfactory survey e$']
+GROUP BY gender
+
+-- The survey seems to have a balanced number of anserws of both genders.
+
+--Which gender frequents more often?
+
+SELECT  gender, visitNo, count(*) as frequency 
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE visitNo != 'Rarely'
+GROUP BY  gender, visitNo
+ORDER BY visitNo, count(*) DESC 
+
+--We see that men visit this store more often.
+----------------------------------------------------------------------------------------------
+
+-- Let's see some attributes that may be related to the frequency of customers in this store. 
+
+-- How often do customers frequent this store?
+
+SELECT count(*), visitNo 
+FROM [dbo].['Starbucks satisfactory survey e$']
+GROUP BY visitNo 
+
+-- We see that "monthly" and "rarely" answers are more frequent.
+-----------------------------------------------------------------------------------------------
+
+--Does income influence customer frequency?
+
+--Checking number of customers according to their frequency and income.
+SELECT count(*), visitNo , income
+FROM [dbo].['Starbucks satisfactory survey e$']
+GROUP BY visitNo, income
+ORDER BY  count(*) DESC, visitNo
+
+--Since 'Rarely' and 'Monthly' were more frequent answers, let's see the results closely. 
+
+--Checking answers for 'Rarely' only.
+SELECT count(*), visitNo , income
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE visitNo = 'Rarely'
+GROUP BY  income, visitNo
+
+--Checking answers for 'Monthly' only.
+SELECT count(*), visitNo , income
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE visitNo = 'Monthly'
+GROUP BY  income, visitNo
+
+-----------------------------------------------------------------------------------------------
+-- Let's check the income of customers who replied 'Monthly' as frequency.
+SELECT count(*) as frequency,  income
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE visitNo IN
+              (SELECT visitNo
+              FROM [dbo].['Starbucks satisfactory survey e$']
+              WHERE visitNo = 'Monthly') 
+GROUP BY income 
+
+
+-- And for those who replied 'Rarely'.
+SELECT count(*) as frequency,  income
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE visitNo IN
+              (SELECT visitNo 
+              FROM [dbo].['Starbucks satisfactory survey e$']
+              WHERE visitNo = 'Rarely') 
+GROUP BY income  
+
+--We see that who receives an income of Less than RM25,000 are less likely to frequent the store.
+
+-------------------------------------------------------------------------------------------------------
+--How about age? does it influence on frequency?
+
+--Checking customers' ages and frequency in the store.  
+SELECT count(*), visitNo , age
+FROM [dbo].['Starbucks satisfactory survey e$']
+GROUP BY visitNo, age
+ORDER BY visitNo, count(*) DESC
+
+
+SELECT count(*), visitNo , age
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE visitNo IN ('Daily', 'Weekly')
+GROUP BY visitNo, age
+ORDER BY visitNo, count(*) DESC  
+
+-- We see that customers with more frequency are in the age range of 20 - 29 years old.
+---------------------------------------------------------------------------------------------------------
+--Does customer with membershipcard frequents more often? 
+
+--I  grouped customers according to their frequency and if have a membership card or not.   
+SELECT COUNT(*) as Frequency, membershipCard, visitNo
+FROM [dbo].['Starbucks satisfactory survey e$']
+GROUP BY visitNo, membershipCard 
+
+--Checking number of custumers with a membership card
+SELECT COUNT(*) as Frequency, membershipCard, visitNo
+FROM [dbo].['Starbucks satisfactory survey e$']
+WHERE membershipCard = 'Yes'  
+GROUP BY visitNo, membershipCard  
+ORDER BY Frequency DESC
+
+--We see that most customers that have membership cards rarely frequent the store.
+
+------------------------------------------------------------------------------------------------------------
+
+
